@@ -1,8 +1,9 @@
 package models
 
 import (
-	"log"
 	"fmt"
+	"gin-blog/pkg/logging"
+	"log"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -20,7 +21,7 @@ type Model struct {
 
 func init() {
 	var (
-		err error
+		err                                               error
 		dbType, dbName, user, password, host, tablePrefix string
 	)
 
@@ -44,6 +45,7 @@ func init() {
 
 	if err != nil {
 		log.Println(err)
+		logging.Error(err)
 	}
 
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
