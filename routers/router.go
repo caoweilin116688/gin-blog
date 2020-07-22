@@ -8,9 +8,11 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 
-	"github.com/gin-gonic/gin"
-
 	"gin-blog/pkg/setting"
+
+	_ "gin-blog/docs" //导入包，自动执行包内的init函数
+
+	"github.com/gin-gonic/gin"
 )
 
 func InitRouter() *gin.Engine {
