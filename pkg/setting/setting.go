@@ -7,32 +7,75 @@ import (
 	"github.com/go-ini/ini"
 )
 
-var (
-	Cfg *ini.File
+type App struct {
+	JwtSecret       string
+	PageSize        int
+	RuntimeRootPath string
 
-	RunMode string
+	//图片
+	ImagePrefixUrl string
+	ImageSavePath  string
+	ImageMaxSize   int
+	ImageAllowExts []string
 
-	HTTPPort     int
+	//日志
+	LogSavePath string
+	LogSaveName string
+	LogFileExt  string
+	TimeFormat  string
+}
+
+var AppSetting = &App{}
+
+type Server struct {
+	RunMode      string
+	HttpPort     int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+}
 
-	PageSize  int
-	JwtSecret string
-)
+var ServerSetting = &Server{}
 
-func init() {
+type Database struct {
+	Type        string
+	User        string
+	Password    string
+	Host        string
+	Name        string
+	TablePrefix string
+}
+
+var DatabaseSetting = &Database{}
+var cfg *ini.File
+
+func Setup() {
+	//编写与配置项保持一致的结构体（App、Server、Database）
+	//使用 MapTo 将配置项映射到结构体上
+	//对一些需特殊设置的配置项进行再赋值
 	var err error
-	Cfg, err = ini.Load("conf/app.ini")
+	cfg, err = ini.Load("conf/app.ini") //配置文件必须为大驼峰命名 否则MapTo无结果
 	if err != nil {
 		log.Fatalf("Fail to parse 'conf/app.ini': %v", err)
 	}
+	mapTo("app", AppSetting)
+	mapTo("server", ServerSetting)
+	mapTo("database", DatabaseSetting)
 
-	LoadBase()
-	LoadServer()
-	LoadApp()
+	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
+	ServerSetting.WriteTimeout = ServerSetting.ReadTimeout * time.Second
 }
 
-func LoadBase() {
+//映射结构体：使用 MapTo 来设置配置参数
+// mapTo map section
+func mapTo(section string, v interface{}) {
+	err := cfg.Section(section).MapTo(v)
+	if err != nil {
+		log.Fatalf("Cfg.MapTo %s err: %v", section, err)
+	}
+}
+
+//采用了直接读取 KEY 的方式去存储配置项,如果增加配置项，代码有点冗余
+/*func LoadBase() {
 	RunMode = Cfg.Section("").Key("RUN_MODE").MustString("debug")
 }
 
@@ -55,4 +98,4 @@ func LoadApp() {
 
 	JwtSecret = sec.Key("JWT_SECRET").MustString("!@)*#)!@U#@*!@!)")
 	PageSize = sec.Key("PAGE_SIZE").MustInt(10)
-}
+}*/

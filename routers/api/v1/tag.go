@@ -31,7 +31,7 @@ func GetTags(c *gin.Context) {
 
 	code := e.SUCCESS
 
-	data["lists"] = models.GetTags(util.GetPage(c), setting.PageSize, maps)
+	data["lists"] = models.GetTags(util.GetPage(c), setting.AppSetting.PageSize, maps)
 	data["total"] = models.GetTagTotal(maps)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -41,7 +41,7 @@ func GetTags(c *gin.Context) {
 	})
 }
 
-// @Summary 新增文章标签
+// @Summary 新增文章标签 http://127.0.0.1:8000/api/v1/tags?name=体育&state=1&created_by=123&token=234
 // @Produce  json
 // @Param name query string true "Name"
 // @Param state query int false "State"

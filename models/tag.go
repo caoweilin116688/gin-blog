@@ -61,8 +61,16 @@ func ExistTagByID(id int) bool {
 	return false
 }
 
+//软删除
 func DeleteTag(id int) bool {
 	db.Where("id = ?", id).Delete(&Tag{})
+
+	return true
+}
+
+//硬删除
+func CleanAllTag() bool {
+	db.Unscoped().Where("deleted_on != ? ", 0).Delete(&Tag{})
 
 	return true
 }

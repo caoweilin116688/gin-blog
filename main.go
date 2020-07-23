@@ -7,15 +7,21 @@ import (
 	"log"
 	"syscall"
 
+	"gin-blog/models"
+	"gin-blog/pkg/logging"
+
 	"github.com/fvbock/endless"
 )
 
 func main() {
+	setting.Setup() //加载app.ini 配置
+	models.Setup()
+	logging.Setup()
 	//优雅重启
-	endless.DefaultReadTimeOut = setting.ReadTimeout
-	endless.DefaultWriteTimeOut = setting.WriteTimeout
+	endless.DefaultReadTimeOut = setting.ServerSetting.ReadTimeout
+	endless.DefaultWriteTimeOut = setting.ServerSetting.WriteTimeout
 	endless.DefaultMaxHeaderBytes = 1 << 20
-	endPoint := fmt.Sprintf(":%d", setting.HTTPPort)
+	endPoint := fmt.Sprintf(":%d", setting.ServerSetting.HttpPort)
 
 	server := endless.NewServer(endPoint, routers.InitRouter())
 	server.BeforeBegin = func(add string) {
