@@ -129,7 +129,7 @@ func EditTag(c *gin.Context) {
 	})
 }
 
-//删除文章标签
+//删除文章标签 127.0.0.1:8000/api/v1/tags/1
 func DeleteTag(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 
