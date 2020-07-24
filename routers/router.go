@@ -1,10 +1,20 @@
 package routers
 
 import (
+	"gin-blog/middleware/jwt"
+	"gin-blog/routers/api"
 	v1 "gin-blog/routers/api/v1"
-	"github.com/gin-gonic/gin"
+	"net/http"
+
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 
 	"gin-blog/pkg/setting"
+	"gin-blog/pkg/upload"
+
+	_ "gin-blog/docs" //导入包，自动执行包内的init函数
+
+	"github.com/gin-gonic/gin"
 )
 
 func InitRouter() *gin.Engine {
@@ -14,9 +24,19 @@ func InitRouter() *gin.Engine {
 
 	r.Use(gin.Recovery())
 
-	gin.SetMode(setting.RunMode)
+	gin.SetMode(setting.ServerSetting.RunMode)
 
+	//当访问host/upload/images/时，将会读取到GOPATH/src/gin-blog/runtime/upload/images 下的文件
+	r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath()))
+
+	r.GET("/auth", api.GetAuth)
+	//swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//图片上传
+	r.POST("/upload", api.UploadImage)
+	//Go 的语法糖,代表了它的作用域
 	apiv1 := r.Group("/api/v1")
+	apiv1.Use(jwt.JWT())
 	{
 		//获取标签列表
 		apiv1.GET("/tags", v1.GetTags)

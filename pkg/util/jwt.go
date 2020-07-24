@@ -8,7 +8,7 @@ import (
 	"gin-blog/pkg/setting"
 )
 
-var jwtSecret = []byte(setting.JwtSecret)
+var jwtSecret = []byte(setting.AppSetting.JwtSecret)
 
 type Claims struct {
 	Username string `json:"username"`
@@ -23,13 +23,14 @@ func GenerateToken(username, password string) (string, error) {
 	claims := Claims{
 		username,
 		password,
-		jwt.StandardClaims {
-			ExpiresAt : expireTime.Unix(),
-			Issuer : "gin-blog",
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "gin-blog",
 		},
 	}
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	//生成token
 	token, err := tokenClaims.SignedString(jwtSecret)
 
 	return token, err
