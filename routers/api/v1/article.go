@@ -1,22 +1,56 @@
 package v1
 
 import (
-	"gin-blog/pkg/logging"
+	"gin-blog/pkg/app"
+	"gin-blog/pkg/setting"
+	"gin-blog/pkg/util"
 	"net/http"
+
+	"gin-blog/service/article_service"
+
+	"gin-blog/service/tag_service"
 
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/unknwon/com"
 
-	"gin-blog/models"
 	"gin-blog/pkg/e"
-	"gin-blog/pkg/setting"
-	"gin-blog/pkg/util"
 )
 
 //获取单个文章 GET http://127.0.0.1:8000/api/v1/articles/1
 func GetArticle(c *gin.Context) {
+	appG := app.Gin{c}
 	id := com.StrTo(c.Param("id")).MustInt()
+	valid := validation.Validation{}
+	valid.Min(id, 1, "id").Message("ID必须大于0")
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
+	}
+	//Article结构体ID初始化
+	articleService := article_service.Article{ID: id}
+	exists, err := articleService.ExistByID()
+	//检查文章是否失败
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
+		return
+	}
+	//文章不存在
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_ARTICLE, nil)
+		return
+	}
+
+	article, err := articleService.Get()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_GET_ARTICLE_FAIL, nil)
+		return
+	}
+	appG.Response(http.StatusOK, e.SUCCESS, article)
+
+	//为分层和优化的代码
+	/*id := com.StrTo(c.Param("id")).MustInt()
 
 	valid := validation.Validation{}
 	valid.Min(id, 1, "id").Message("ID必须大于0")
@@ -40,12 +74,57 @@ func GetArticle(c *gin.Context) {
 		"code": code,
 		"msg":  e.GetMsg(code),
 		"data": data,
-	})
+	})*/
 }
 
 //获取多个文章 GET  http://127.0.0.1:8000/api/v1/articles
 func GetArticles(c *gin.Context) {
+	appG := app.Gin{C: c}
+	valid := validation.Validation{}
+
+	state := -1
+	if arg := c.PostForm("state"); arg != "" {
+		state = com.StrTo(arg).MustInt()
+		valid.Range(state, 0, 1, "state")
+	}
+
+	tagId := -1
+	if arg := c.PostForm("tag_id"); arg != "" {
+		tagId = com.StrTo(arg).MustInt()
+		valid.Min(tagId, 1, "tag_id")
+	}
+
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusBadRequest, e.INVALID_PARAMS, nil)
+		return
+	}
+
+	articleService := article_service.Article{
+		TagID:    tagId,
+		State:    state,
+		PageNum:  util.GetPage(c),
+		PageSize: setting.AppSetting.PageSize,
+	}
+
+	total, err := articleService.Count()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_COUNT_ARTICLE_FAIL, nil)
+		return
+	}
+
+	articles, err := articleService.GetAll()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_GET_ARTICLES_FAIL, nil)
+		return
+	}
+
 	data := make(map[string]interface{})
+	data["lists"] = articles
+	data["total"] = total
+
+	appG.Response(http.StatusOK, e.SUCCESS, data)
+	/*data := make(map[string]interface{})
 	maps := make(map[string]interface{})
 	valid := validation.Validation{}
 
@@ -69,8 +148,8 @@ func GetArticles(c *gin.Context) {
 	if !valid.HasErrors() {
 		code = e.SUCCESS
 
-		data["lists"] = models.GetArticles(util.GetPage(c), setting.AppSetting.PageSize, maps)
-		data["total"] = models.GetArticleTotal(maps)
+		data["lists"], _ = models.GetArticles(util.GetPage(c), setting.AppSetting.PageSize, maps)
+		data["total"], _ = models.GetArticleTotal(maps)
 
 	} else {
 		for _, err := range valid.Errors {
@@ -82,12 +161,60 @@ func GetArticles(c *gin.Context) {
 		"code": code,
 		"msg":  e.GetMsg(code),
 		"data": data,
-	})
+	})*/
+}
+
+type AddArticleForm struct {
+	TagID         int    `form:"tag_id" valid:"Required;Min(1)"`
+	Title         string `form:"title" valid:"Required;MaxSize(100)"`
+	Desc          string `form:"desc" valid:"Required;MaxSize(255)"`
+	Content       string `form:"content" valid:"Required;MaxSize(65535)"`
+	CreatedBy     string `form:"created_by" valid:"Required;MaxSize(100)"`
+	CoverImageUrl string `form:"cover_image_url" valid:"Required;MaxSize(255)"`
+	State         int    `form:"state" valid:"Range(0,1)"`
 }
 
 //新增文章 POST  http://127.0.0.1:8000/api/v1/articles?tag_id=1&title=test1&desc=test-desc&content=test-content&created_by=test-created&state=1
 func AddArticle(c *gin.Context) {
-	tagId := com.StrTo(c.Query("tag_id")).MustInt()
+	var (
+		appG = app.Gin{C: c}
+		form AddArticleForm
+	)
+
+	httpCode, errCode := app.BindAndValid(c, &form)
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+	tagService := tag_service.Tag{ID: form.TagID}
+	exists, err := tagService.ExistByID()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_EXIST_TAG_FAIL, nil)
+		return
+	}
+
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_TAG, nil)
+		return
+	}
+
+	articleService := article_service.Article{
+		TagID:         form.TagID,
+		Title:         form.Title,
+		Desc:          form.Desc,
+		Content:       form.Content,
+		CoverImageUrl: form.CoverImageUrl,
+		State:         form.State,
+		CreatedBy:     form.CreatedBy,
+	}
+	if err := articleService.Add(); err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_ADD_ARTICLE_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
+	/*tagId := com.StrTo(c.Query("tag_id")).MustInt()
 	title := c.Query("title")
 	desc := c.Query("desc")
 	content := c.Query("content")
@@ -128,12 +255,73 @@ func AddArticle(c *gin.Context) {
 		"code": code,
 		"msg":  e.GetMsg(code),
 		"data": make(map[string]interface{}),
-	})
+	})*/
+}
+
+type EditArticleForm struct {
+	ID            int    `form:"id" valid:"Required;Min(1)"`
+	TagID         int    `form:"tag_id" valid:"Required;Min(1)"`
+	Title         string `form:"title" valid:"Required;MaxSize(100)"`
+	Desc          string `form:"desc" valid:"Required;MaxSize(255)"`
+	Content       string `form:"content" valid:"Required;MaxSize(65535)"`
+	ModifiedBy    string `form:"modified_by" valid:"Required;MaxSize(100)"`
+	CoverImageUrl string `form:"cover_image_url" valid:"Required;MaxSize(255)"`
+	State         int    `form:"state" valid:"Range(0,1)"`
 }
 
 //修改文章 PUT：http://127.0.0.1:8000/api/v1/articles/1?tag_id=1&title=test-edit1&desc=test-desc-edit&content=test-content-edit&modified_by=test-created-edit&state=0
 func EditArticle(c *gin.Context) {
-	valid := validation.Validation{}
+	var (
+		appG = app.Gin{C: c}
+		form = EditArticleForm{ID: com.StrTo(c.Param("id")).MustInt()}
+	)
+
+	httpCode, errCode := app.BindAndValid(c, &form)
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
+	}
+
+	articleService := article_service.Article{
+		ID:            form.ID,
+		TagID:         form.TagID,
+		Title:         form.Title,
+		Desc:          form.Desc,
+		Content:       form.Content,
+		CoverImageUrl: form.CoverImageUrl,
+		ModifiedBy:    form.ModifiedBy,
+		State:         form.State,
+	}
+	exists, err := articleService.ExistByID()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
+		return
+	}
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_ARTICLE, nil)
+		return
+	}
+
+	tagService := tag_service.Tag{ID: form.TagID}
+	exists, err = tagService.ExistByID()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_EXIST_TAG_FAIL, nil)
+		return
+	}
+
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_TAG, nil)
+		return
+	}
+
+	err = articleService.Edit()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_EDIT_ARTICLE_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
+	/*valid := validation.Validation{}
 
 	id := com.StrTo(c.Param("id")).MustInt()
 	tagId := com.StrTo(c.Query("tag_id")).MustInt()
@@ -193,12 +381,42 @@ func EditArticle(c *gin.Context) {
 		"code": code,
 		"msg":  e.GetMsg(code),
 		"data": make(map[string]string),
-	})
+	})*/
 }
 
 //删除文章 DELETE：http://127.0.0.1:8000/api/v1/articles/1
 func DeleteArticle(c *gin.Context) {
+	appG := app.Gin{C: c}
+	valid := validation.Validation{}
 	id := com.StrTo(c.Param("id")).MustInt()
+	valid.Min(id, 1, "id").Message("ID必须大于0")
+
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
+	}
+
+	articleService := article_service.Article{ID: id}
+	exists, err := articleService.ExistByID()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
+		return
+	}
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_ARTICLE, nil)
+		return
+	}
+
+	err = articleService.Delete()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_DELETE_ARTICLE_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
+
+	/*id := com.StrTo(c.Param("id")).MustInt()
 
 	valid := validation.Validation{}
 	valid.Min(id, 1, "id").Message("ID必须大于0")
@@ -221,5 +439,5 @@ func DeleteArticle(c *gin.Context) {
 		"code": code,
 		"msg":  e.GetMsg(code),
 		"data": make(map[string]string),
-	})
+	})*/
 }
