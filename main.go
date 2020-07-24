@@ -15,8 +15,8 @@ import (
 
 func main() {
 	setting.Setup() //加载app.ini 配置
-	models.Setup()
-	logging.Setup()
+	models.Setup()  //初始化DB
+	logging.Setup() //初始化日志
 	//优雅重启
 	endless.DefaultReadTimeOut = setting.ServerSetting.ReadTimeout
 	endless.DefaultWriteTimeOut = setting.ServerSetting.WriteTimeout

@@ -13,6 +13,16 @@ func getLogFilePath() string {
 	return fmt.Sprintf("%s", setting.AppSetting.LogSavePath)
 }
 
+//日志文件名
+func getLogFileName() string {
+	return fmt.Sprintf("%s%s.%s",
+		setting.AppSetting.LogSaveName,
+		time.Now().Format(setting.AppSetting.TimeFormat),
+		setting.AppSetting.LogFileExt,
+	)
+}
+
+//日志路径+日志文件名
 func getLogFileFullPath() string {
 	prefixPath := getLogFilePath()
 	suffixPath := fmt.Sprintf("%s%s.%s", setting.AppSetting.LogSaveName, time.Now().Format(setting.AppSetting.TimeFormat), setting.AppSetting.LogFileExt)
@@ -22,17 +32,17 @@ func getLogFileFullPath() string {
 
 //openLogFile 封装一下
 func openLogFile(fileName, filePath string) (*os.File, error) {
+	//获取当前文件路径 如 执行 go run main.go 路径为 ~/go/src/gin-blog
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("os.Getwd err: %v", err)
 	}
-
+	//src的值为~/go/src/gin-blog/logs/
 	src := dir + "/" + filePath
 	perm := file.CheckPermission(src)
 	if perm == true {
 		return nil, fmt.Errorf("file.CheckPermission Permission denied src: %s", src)
 	}
-
 	err = file.IsNotExistMkDir(src)
 	if err != nil {
 		return nil, fmt.Errorf("file.IsNotExistMkDir src: %s, err: %v", src, err)

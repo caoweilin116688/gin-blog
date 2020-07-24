@@ -31,6 +31,7 @@ func CheckPermission(src string) bool {
 
 func IsNotExistMkDir(src string) error {
 	if exist := CheckExist(src); exist == false {
+		//创建目录失败，返回err
 		if err := MkDir(src); err != nil {
 			return err
 		}
@@ -39,6 +40,7 @@ func IsNotExistMkDir(src string) error {
 	return nil
 }
 
+//创建目录 成功返回 nil 失败返回err
 func MkDir(src string) error {
 	err := os.MkdirAll(src, os.ModePerm)
 	if err != nil {

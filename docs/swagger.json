@@ -10,7 +10,7 @@
                 "produces": [
                     "application/json"
                 ],
-                "summary": "新增文章标签",
+                "summary": "新增文章标签 http://127.0.0.1:8000/api/v1/tags?name=体育\u0026state=1\u0026created_by=123\u0026token=234",
                 "parameters": [
                     {
                         "type": "string",

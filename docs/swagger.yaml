@@ -25,7 +25,7 @@ paths:
           description: '{"code":200,"data":{},"msg":"ok"}'
           schema:
             type: string
-      summary: 新增文章标签
+      summary: 新增文章标签 http://127.0.0.1:8000/api/v1/tags?name=体育&state=1&created_by=123&token=234
   /api/v1/tags/{id}:
     put:
       parameters:

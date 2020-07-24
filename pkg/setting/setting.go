@@ -61,6 +61,7 @@ func Setup() {
 	mapTo("server", ServerSetting)
 	mapTo("database", DatabaseSetting)
 
+	AppSetting.ImageMaxSize = AppSetting.ImageMaxSize * 1024 * 1024 //M转化为Byte
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.ReadTimeout * time.Second
 }
