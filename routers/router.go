@@ -43,6 +43,9 @@ func InitRouter() *gin.Engine {
 		//导出标签,生成xlsx文件
 		r.POST("/tags/export", v1.ExportTag)
 
+		//导入标签
+		r.POST("/tags/import", v1.ImportTag)
+
 		//获取标签列表
 		apiv1.GET("/tags", v1.GetTags)
 		//新建标签

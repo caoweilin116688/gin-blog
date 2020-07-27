@@ -146,6 +146,7 @@ func (t *Tag) Export() (string, error) {
 	return filename, nil
 }
 
+//从xlsx导入标签
 func (t *Tag) Import(r io.Reader) error {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
