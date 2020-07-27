@@ -90,6 +90,7 @@ func (t *Tag) GetAll() ([]models.Tag, error) {
 	return tags, nil
 }
 
+//导出标签
 func (t *Tag) Export() (string, error) {
 	tags, err := t.GetAll()
 	if err != nil {
