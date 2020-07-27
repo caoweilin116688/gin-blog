@@ -25,6 +25,10 @@ type App struct {
 	TimeFormat  string
 
 	ExportSavePath string
+	//二维码
+	QrCodeSavePath string
+	//字体
+	FontSavePath string
 }
 
 var AppSetting = &App{}
