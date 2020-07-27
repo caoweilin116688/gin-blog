@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gin-blog/pkg/gredis"
 	"gin-blog/pkg/setting"
 	"gin-blog/routers"
 	"log"
@@ -17,6 +18,8 @@ func main() {
 	setting.Setup() //加载app.ini 配置
 	models.Setup()  //初始化DB
 	logging.Setup() //初始化日志
+	gredis.Setup()  //初始化redis
+
 	//优雅重启
 	endless.DefaultReadTimeOut = setting.ServerSetting.ReadTimeout
 	endless.DefaultWriteTimeOut = setting.ServerSetting.WriteTimeout

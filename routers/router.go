@@ -2,6 +2,7 @@ package routers
 
 import (
 	"gin-blog/middleware/jwt"
+	"gin-blog/pkg/export"
 	"gin-blog/routers/api"
 	v1 "gin-blog/routers/api/v1"
 	"net/http"
@@ -28,7 +29,8 @@ func InitRouter() *gin.Engine {
 
 	//当访问host/upload/images/时，将会读取到GOPATH/src/gin-blog/runtime/upload/images 下的文件
 	r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath()))
-
+	//下载xlsx文件 访问 host/export,将会访问到 GOPATH/src/gin-blog/runtime/export
+	r.StaticFS("/export", http.Dir(export.GetExcelFullPath()))
 	r.GET("/auth", api.GetAuth)
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -38,6 +40,12 @@ func InitRouter() *gin.Engine {
 	apiv1 := r.Group("/api/v1")
 	apiv1.Use(jwt.JWT())
 	{
+		//导出标签,生成xlsx文件
+		r.POST("/tags/export", v1.ExportTag)
+
+		//导入标签
+		r.POST("/tags/import", v1.ImportTag)
+
 		//获取标签列表
 		apiv1.GET("/tags", v1.GetTags)
 		//新建标签
