@@ -90,7 +90,42 @@ func (t *Tag) GetAll() ([]models.Tag, error) {
 	return tags, nil
 }
 
-//导出标签
+//导出标签 https://github.com/360EntSecGroup-Skylar/excelize  实现
+func (t *Tag) Export2() (string, error) {
+	tags, err := t.GetAll()
+	if err != nil {
+		return "", err
+	}
+	xlsFile := excelize.NewFile()
+
+	categories := map[string]string{"A1": "ID", "B1": "名称", "C1": "创建人", "D1": "创建时间", "E1": "修改人", "F1": "修改时间"}
+	for k, v := range categories {
+		xlsFile.SetCellValue("Sheet1", k, v)
+	}
+	for k, v := range tags {
+		c := k + 2
+		xlsFile.SetCellValue("Sheet1", "A"+strconv.Itoa(c), v.ID)
+		xlsFile.SetCellValue("Sheet1", "B"+strconv.Itoa(c), v.Name)
+		xlsFile.SetCellValue("Sheet1", "C"+strconv.Itoa(c), v.CreatedBy)
+		xlsFile.SetCellValue("Sheet1", "D"+strconv.Itoa(c), v.CreatedOn)
+		xlsFile.SetCellValue("Sheet1", "E"+strconv.Itoa(c), v.ModifiedBy)
+		xlsFile.SetCellValue("Sheet1", "F"+strconv.Itoa(c), v.ModifiedOn)
+	}
+
+	time := strconv.Itoa(int(time.Now().Unix()))
+	filename := "tags-" + time + export.EXT
+	dirFullPath := export.GetExcelFullPath()
+	err = file.IsNotExistMkDir(dirFullPath)
+	if err != nil {
+		return "", err
+	}
+	if err := xlsFile.SaveAs(dirFullPath + filename); err != nil {
+		logging.Error(err)
+	}
+	return filename, nil
+}
+
+//导出标签 https://github.com/tealeg/xlsx 实现
 func (t *Tag) Export() (string, error) {
 	tags, err := t.GetAll()
 	if err != nil {
@@ -146,7 +181,7 @@ func (t *Tag) Export() (string, error) {
 	return filename, nil
 }
 
-//从xlsx导入标签
+//从xlsx导入标签  https://github.com/360EntSecGroup-Skylar/excelize
 func (t *Tag) Import(r io.Reader) error {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {

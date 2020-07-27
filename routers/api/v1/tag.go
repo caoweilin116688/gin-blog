@@ -297,7 +297,7 @@ func ExportTag(c *gin.Context) {
 		State: state,
 	}
 
-	filename, err := tagService.Export()
+	filename, err := tagService.Export2()
 	if err != nil {
 		appG.Response(http.StatusOK, e.ERROR_EXPORT_TAG_FAIL, nil)
 		return

@@ -81,7 +81,7 @@ func (a *Article) Get() (*models.Article, error) {
 //加入缓存
 func (a *Article) GetAll() ([]*models.Article, error) {
 	var (
-		articles, cacheArticles []*models.Article //articles,cacheArticles都为 结构体指针数组,元素存放结构体地址
+		articles, cacheArticles []*models.Article //articles,cacheArticles都为 结构体指针切片,元素存放结构体地址
 	)
 	cache := cache_service.Article{
 		TagID: a.TagID,
