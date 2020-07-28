@@ -78,6 +78,7 @@ func NewArticlePosterBg(name string, ap *ArticlePoster, rect *Rect, pt *Pt) *Art
 	}
 }
 
+//绘制文字
 type DrawText struct {
 	JPG    draw.Image
 	Merged *os.File
@@ -194,11 +195,4 @@ func (a *ArticlePosterBg) Generate() (string, string, error) {
 	}
 
 	return fileName, path, nil
-}
-
-// CheckNotExist check if the file exists
-func CheckNotExist(src string) bool {
-	_, err := os.Stat(src)
-
-	return os.IsNotExist(err)
 }

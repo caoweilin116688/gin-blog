@@ -3,6 +3,7 @@ package routers
 import (
 	"gin-blog/middleware/jwt"
 	"gin-blog/pkg/export"
+	"gin-blog/pkg/qrcode"
 	"gin-blog/routers/api"
 	v1 "gin-blog/routers/api/v1"
 	"net/http"
@@ -31,6 +32,8 @@ func InitRouter() *gin.Engine {
 	r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath()))
 	//下载xlsx文件 访问 host/export,将会访问到 GOPATH/src/gin-blog/runtime/export
 	r.StaticFS("/export", http.Dir(export.GetExcelFullPath()))
+	//访问二维码
+	r.StaticFS("/qrcode", http.Dir(qrcode.GetQrCodeFullPath()))
 	r.GET("/auth", api.GetAuth)
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

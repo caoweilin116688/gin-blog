@@ -448,10 +448,12 @@ const (
 	QRCODE_URL = "https://github.com/EDDYCJY/blog#gin%E7%B3%BB%E5%88%97%E7%9B%AE%E5%BD%95"
 )
 
+//生成二维码
 func GenerateArticlePoster(c *gin.Context) {
 	appG := app.Gin{C: c}
 	article := &article_service.Article{}
 	qr := qrcode.NewQrCode(QRCODE_URL, 300, 300, qr.M, qr.Auto)
+	//二维码文件名称
 	posterName := article_service.GetPosterFlag() + "-" + qrcode.GetQrCodeFileName(qr.URL) + qr.GetQrCodeExt()
 	articlePoster := article_service.NewArticlePoster(posterName, article, qr)
 	articlePosterBgService := article_service.NewArticlePosterBg(
