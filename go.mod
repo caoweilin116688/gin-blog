@@ -21,7 +21,7 @@ require (
 	github.com/gomodule/redigo v2.0.1-0.20180401191855-9352ab68be13+incompatible
 	github.com/jinzhu/gorm v1.9.15
 	github.com/mailru/easyjson v0.7.1 // indirect
-	github.com/robfig/cron v1.2.0 // indirect
+	github.com/robfig/cron v1.2.0
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.7
 	github.com/tealeg/xlsx v1.0.5
