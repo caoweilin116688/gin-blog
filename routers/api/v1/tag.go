@@ -73,6 +73,12 @@ func GetTags(c *gin.Context) {
 	})*/
 }
 
+type AddTagForm struct {
+	Name      string `form:"name" valid:"Required;MaxSize(100)"`
+	CreatedBy string `form:"created_by" valid:"Required;MaxSize(100)"`
+	State     int    `form:"state" valid:"Range(0,1)"`
+}
+
 // @Summary 新增文章标签 http://127.0.0.1:8000/api/v1/tags?name=体育&state=1&created_by=123&token=234
 // @Produce  json
 // @Param name query string true "Name"
@@ -81,35 +87,40 @@ func GetTags(c *gin.Context) {
 // @Success 200 {string} json "{"code":200,"data":{},"msg":"ok"}"
 // @Router /api/v1/tags [post]
 func AddTag(c *gin.Context) {
-	appG := app.Gin{C: c}
-	name := c.Query("name")
-	state := -1
-	if arg := c.Query("state"); arg != "" {
-		state = com.StrTo(arg).MustInt()
+	var (
+		appG = app.Gin{C: c}
+		form AddTagForm
+	)
+	//验证表单信息
+	httpCode, errCode := app.BindAndValid(c, &form)
+	if errCode != e.SUCCESS {
+		appG.Response(httpCode, errCode, nil)
+		return
 	}
 
 	tagService := tag_service.Tag{
-		Name:     name,
-		State:    state,
-		PageNum:  util.GetPage(c),
-		PageSize: setting.AppSetting.PageSize,
+		Name:      form.Name,
+		CreatedBy: form.CreatedBy,
+		State:     form.State,
 	}
-	tags, err := tagService.GetAll()
+	//判断该标签名是否存在
+	exists, err := tagService.ExistByName()
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, e.ERROR_GET_TAGS_FAIL, nil)
+		appG.Response(http.StatusInternalServerError, e.ERROR_EXIST_TAG_FAIL, nil)
+		return
+	}
+	if exists {
+		appG.Response(http.StatusOK, e.ERROR_EXIST_TAG, nil)
+		return
+	}
+	//入库
+	err = tagService.Add()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, e.ERROR_ADD_TAG_FAIL, nil)
 		return
 	}
 
-	count, err := tagService.Count()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, e.ERROR_COUNT_TAG_FAIL, nil)
-		return
-	}
-
-	appG.Response(http.StatusOK, e.SUCCESS, map[string]interface{}{
-		"lists": tags,
-		"total": count,
-	})
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
 	/*name := c.Query("name")
 	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
 	createdBy := c.Query("created_by")
