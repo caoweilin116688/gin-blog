@@ -24,7 +24,6 @@ func GetArticle(c *gin.Context) {
 	appG := app.Gin{c}
 	id := com.StrTo(c.Param("id")).MustInt()
 	valid := validation.Validation{}
-	valid.Min(id, 1, "id").Message("ID必须大于0")
 	if valid.HasErrors() {
 		app.MarkErrors(valid.Errors)
 		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
