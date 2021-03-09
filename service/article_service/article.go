@@ -24,6 +24,7 @@ type Article struct {
 	PageSize int
 }
 
+//添加文章
 func (a *Article) Add() error {
 	article := map[string]interface{}{
 		"tag_id":          a.TagID,

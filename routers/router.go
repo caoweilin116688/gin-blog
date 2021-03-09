@@ -34,7 +34,10 @@ func InitRouter() *gin.Engine {
 	r.StaticFS("/export", http.Dir(export.GetExcelFullPath()))
 	//访问二维码
 	r.StaticFS("/qrcode", http.Dir(qrcode.GetQrCodeFullPath()))
+
+	//http://127.0.0.1:8000/auth?username=test&password=test123456
 	r.GET("/auth", api.GetAuth)
+
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//图片上传

@@ -14,12 +14,12 @@ import (
 	"github.com/astaxie/beego/validation"
 	"github.com/boombuler/barcode/qr"
 	"github.com/gin-gonic/gin"
-	"github.com/unknwon/com"
+	"github.com/unknwon/com" //这是一个用于Go编程语言常用功能的开源项目。
 
 	"gin-blog/pkg/e"
 )
 
-//获取单个文章 GET http://127.0.0.1:8000/api/v1/articles/1
+//获取单个文章 GET http://127.0.0.1:8000/api/v1/articles/1?token=342fd
 func GetArticle(c *gin.Context) {
 	appG := app.Gin{c}
 	id := com.StrTo(c.Param("id")).MustInt()
@@ -78,7 +78,7 @@ func GetArticle(c *gin.Context) {
 	})*/
 }
 
-//获取多个文章 GET  http://127.0.0.1:8000/api/v1/articles
+//获取多个文章 GET  http://127.0.0.1:8000/api/v1/articles?token=342fd
 func GetArticles(c *gin.Context) {
 	appG := app.Gin{C: c}
 	valid := validation.Validation{}
