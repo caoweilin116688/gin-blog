@@ -91,6 +91,7 @@ func (a *Article) GetAll() ([]*models.Article, error) {
 		PageNum:  a.PageNum,
 		PageSize: a.PageSize,
 	}
+	//redis key
 	key := cache.GetArticlesKey()
 	if gredis.Exists(key) {
 		data, err := gredis.Get(key)
@@ -101,7 +102,7 @@ func (a *Article) GetAll() ([]*models.Article, error) {
 			return cacheArticles, nil
 		}
 	}
-
+	//articles 为 Article结构体类型的切片
 	articles, err := models.GetArticles(a.PageNum, a.PageSize, a.getMaps())
 	if err != nil {
 		return nil, err
@@ -119,10 +120,12 @@ func (a *Article) ExistByID() (bool, error) {
 	return models.ExistArticleByID(a.ID)
 }
 
+//根据条件 state 和  tag_id 统计总数
 func (a *Article) Count() (int, error) {
 	return models.GetArticleTotal(a.getMaps())
 }
 
+//组装查询条件
 func (a *Article) getMaps() map[string]interface{} {
 	maps := make(map[string]interface{})
 	maps["deleted_on"] = 0

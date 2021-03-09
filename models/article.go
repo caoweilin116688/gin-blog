@@ -2,6 +2,7 @@ package models
 
 import "github.com/jinzhu/gorm"
 
+//总共20个字段
 type Article struct {
 	Model
 

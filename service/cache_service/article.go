@@ -21,6 +21,7 @@ func (a *Article) GetArticleKey() string {
 }
 
 func (a *Article) GetArticlesKey() string {
+	// redis key如： ARTICLE_LIST_8_1_10
 	keys := []string{
 		e.CACHE_ARTICLE,
 		"LIST",

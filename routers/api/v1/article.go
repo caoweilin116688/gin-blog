@@ -5,6 +5,7 @@ import (
 	"gin-blog/pkg/qrcode"
 	"gin-blog/pkg/setting"
 	"gin-blog/pkg/util"
+	"log"
 	"net/http"
 
 	"gin-blog/service/article_service"
@@ -83,6 +84,7 @@ func GetArticles(c *gin.Context) {
 	appG := app.Gin{C: c}
 	valid := validation.Validation{}
 
+	//GET请求 form-data 传 state tag_id字段
 	state := -1
 	if arg := c.PostForm("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
@@ -94,13 +96,15 @@ func GetArticles(c *gin.Context) {
 		tagId = com.StrTo(arg).MustInt()
 		valid.Min(tagId, 1, "tag_id")
 	}
-
+	log.Println(state)
+	log.Println(tagId)
 	if valid.HasErrors() {
 		app.MarkErrors(valid.Errors)
 		appG.Response(http.StatusBadRequest, e.INVALID_PARAMS, nil)
 		return
 	}
 
+	//articleService为结构体
 	articleService := article_service.Article{
 		TagID:    tagId,
 		State:    state,
@@ -121,7 +125,7 @@ func GetArticles(c *gin.Context) {
 	}
 
 	data := make(map[string]interface{})
-	data["lists"] = articles
+	data["lists"] = articles //articles结构体类型的 切片
 	data["total"] = total
 
 	appG.Response(http.StatusOK, e.SUCCESS, data)
