@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"gin-blog/middleware/jwt"
 	"gin-blog/pkg/export"
 	"gin-blog/pkg/qrcode"
 	"gin-blog/routers/api"
@@ -44,7 +43,8 @@ func InitRouter() *gin.Engine {
 	r.POST("/upload", api.UploadImage)
 	//Go 的语法糖,代表了它的作用域
 	apiv1 := r.Group("/api/v1")
-	apiv1.Use(jwt.JWT())
+	//apiv1.Use(jwt.JWT())
+	apiv1.Use()
 	{
 		//导出标签,生成xlsx文件
 		r.POST("/tags/export", v1.ExportTag)
